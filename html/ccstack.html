@@ -1,0 +1,371 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>ccstack</title><meta name="generator" content="MATLAB 9.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2020-01-03"><meta name="DC.source" content="ccstack.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Process flow:</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> [X, Stats] = ccstack(method, A, varargin)
+
+p = inputParser;
+p.addOptional(<span class="string">'ref'</span>, 0);
+p.addOptional(<span class="string">'ccthreshold'</span>, 0);
+p.addOptional(<span class="string">'eps'</span>, 1e-6);
+p.addOptional(<span class="string">'maxiter'</span>, 100);
+p.addOptional(<span class="string">'v'</span>, 0);
+
+p.parse(varargin{:});
+
+ref         = p.Results.ref;
+ccthreshold = p.Results.ccthreshold;
+eps         = p.Results.eps;
+maxiter     = p.Results.maxiter;
+v           = p.Results.v;
+
+<span class="keyword">if</span> p.Results.v == 1; fprintf(<span class="string">"Stack method: %s\n"</span>, method); <span class="keyword">end</span>
+
+<span class="keyword">if</span> method == <span class="string">"linear"</span>
+
+    X = mean(A, 2);
+    Stats.Ntimelag = size(A, 1);
+    Stats.Ntrace = size(A, 2);
+
+<span class="keyword">elseif</span> method == <span class="string">"selective"</span>
+
+    <span class="keyword">if</span> length(ref) ~= size(A, 1)
+        error(<span class="string">"Length of reference is diferent from trace matrix."</span>);
+    <span class="keyword">end</span>
+
+    [X, Stats] = selectivestack(A, ref, ccthreshold, v);
+
+<span class="keyword">elseif</span> method == <span class="string">"robust"</span>
+
+    [X, Stats] = robuststack(A, eps, maxiter, v);
+
+<span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">function</span> [X, Stats] = selectivestack(A, ref, ccthreshold, v)
+</pre><h2 id="2">Process flow:</h2><pre class="language-matlab">1. compute <span class="untermstring">Pearson's correlation coefficient between each trace and</span>
+ref.
+2. thresholding <span class="string">out</span> <span class="string">them</span> <span class="string">and</span> <span class="string">stack</span>
+</pre><pre class="codeinput"><span class="comment">% Nan check</span>
+<span class="keyword">if</span> any(any(isnan(A)))
+    warning(<span class="string">"Trace contain NaN value. Ignore the trace."</span>);
+    nancol = any(isnan(A));
+    A = A(:, ~nancol);
+<span class="keyword">end</span>
+
+cclist = zeros(size(A, 2), 1);
+<span class="keyword">for</span> i = 1:size(A, 2)
+    temp = corrcoef(A(:, i), ref);
+    cclist(i) = temp(1,2);
+<span class="keyword">end</span>
+ind = cclist &gt;= ccthreshold;
+X = mean(A(:, ind), 2);
+
+Stats.accceptance_ratio = sum(cclist &gt;= ccthreshold) / size(A, 2) * 100;
+temp_ref = corrcoef(X, ref);
+Stats.cc_to_ref = temp_ref(1,2);
+
+<span class="keyword">if</span> v == 1
+    fprintf(<span class="string">"Acceptance ratio: %4.2f [%%]\n"</span>, Stats.accceptance_ratio);
+    fprintf(<span class="string">"CC between stacked and reference: %4.2f\n"</span>, Stats.cc_to_ref);
+<span class="keyword">end</span>
+</pre><pre class="codeinput"><span class="keyword">end</span>
+
+<span class="keyword">function</span> [Bnew, Stats] = robuststack(A, eps, maxiter, v)
+
+    <span class="keyword">if</span> any(any(isnan(A)))
+        <span class="comment">% Nan check</span>
+        warning(<span class="string">"Traces contain NaN value. Ignore the trace."</span>);
+        nancol = any(isnan(A));
+        A = A(:, ~nancol);
+    <span class="keyword">elseif</span> any(all(A==0))
+        <span class="comment">% All zero check</span>
+        warning(<span class="string">"Traces contain all zero trace. Ignore the trace."</span>);
+        zerocol = all(A==0);
+        A = A(:, ~zerocol);
+    <span class="keyword">end</span>
+
+    N = size(A,2);
+    Bold = median(A, 2, <span class="string">'omitnan'</span>);
+    Bold_norm = Bold ./ norm(Bold,2);
+    w =zeros(N, 1);
+    r = zeros(N, 1);
+    d2 = zeros(N, 1);
+
+    <span class="comment">% do 2-norm for all columns in A</span>
+    <span class="keyword">for</span> ii = 1:N
+        d2(ii) = norm(A(:,ii),2);
+    <span class="keyword">end</span>
+
+    BdotD = sum(A .* Bold_norm, 1);
+
+    <span class="keyword">for</span> ii = 1:N
+        r(ii) = norm(A(:,ii) - (BdotD(ii) .* Bold_norm),2);
+        w(ii) = abs(BdotD(ii)) ./ d2(ii) ./ r(ii);
+    <span class="keyword">end</span>
+
+    Bnew = mean(w'.*A,2);
+    Bnew_norm = Bnew ./ norm(Bnew,2);
+
+    <span class="comment">% check convergence</span>
+    epsN = norm(Bnew_norm - Bold_norm,1) / (norm(Bnew_norm,2) * N);
+    Bold_norm = Bnew_norm;
+    iter = 0;
+
+    <span class="keyword">while</span> (epsN &gt; eps) &amp;&amp; (iter &lt;= maxiter)
+
+        <span class="keyword">if</span> v==1
+            fprintf(<span class="string">"Iteration %d\n"</span>, iter);
+        <span class="keyword">end</span>
+
+        BdotD = sum(A .* Bold_norm, 1);
+
+        <span class="keyword">for</span> ii = 1:N
+            r(ii) = norm(A(:,ii) - (BdotD(ii) .* Bold_norm),2);
+            w(ii) = abs(BdotD(ii)) ./ d2(ii) ./ r(ii);
+        <span class="keyword">end</span>
+
+        Bnew = mean(w'.*A, 2);
+        Bnew_norm = Bnew ./ norm(Bnew, 2);
+        <span class="comment">% check convergence</span>
+        epsN = norm(Bnew_norm - Bold_norm,1) / (norm(Bnew_norm,2) * N);
+        Bold_norm = Bnew_norm;
+        iter = iter + 1;
+
+        Stats.epsN(iter) = epsN;
+
+        <span class="keyword">if</span> v==1
+            fprintf(<span class="string">"epsN = %4.4e\n"</span>, epsN);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    <span class="keyword">if</span> iter &gt;= maxiter
+        warning(<span class="string">"Robutst stack is not converged."</span>);
+    <span class="keyword">end</span>
+
+    Stats.weight = w;
+    Stats.iter = iter-1;
+
+<span class="keyword">end</span>
+</pre><pre class="codeoutput error">Not enough input arguments.
+
+Error in ccstack (line 20)
+if method == "linear"
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function [X, Stats] = ccstack(method, A, varargin)
+
+p = inputParser;
+p.addOptional('ref', 0);
+p.addOptional('ccthreshold', 0);
+p.addOptional('eps', 1e-6);
+p.addOptional('maxiter', 100);
+p.addOptional('v', 0);
+
+p.parse(varargin{:});
+
+ref         = p.Results.ref;
+ccthreshold = p.Results.ccthreshold;
+eps         = p.Results.eps;
+maxiter     = p.Results.maxiter;
+v           = p.Results.v;
+
+if p.Results.v == 1; fprintf("Stack method: %s\n", method); end
+
+if method == "linear"
+    
+    X = mean(A, 2);
+    Stats.Ntimelag = size(A, 1);
+    Stats.Ntrace = size(A, 2);
+    
+elseif method == "selective"
+    
+    if length(ref) ~= size(A, 1)
+        error("Length of reference is diferent from trace matrix.");
+    end
+    
+    [X, Stats] = selectivestack(A, ref, ccthreshold, v);
+
+elseif method == "robust"
+    
+    [X, Stats] = robuststack(A, eps, maxiter, v);
+
+end
+end
+
+function [X, Stats] = selectivestack(A, ref, ccthreshold, v)
+%% Process flow:
+%   1. compute Pearson's correlation coefficient between each trace and
+%   ref.
+%   2. thresholding out them and stack
+
+% Nan check
+if any(any(isnan(A)))
+    warning("Trace contain NaN value. Ignore the trace.");
+    nancol = any(isnan(A));
+    A = A(:, ~nancol);
+end
+
+cclist = zeros(size(A, 2), 1);
+for i = 1:size(A, 2)
+    temp = corrcoef(A(:, i), ref);
+    cclist(i) = temp(1,2);
+end
+ind = cclist >= ccthreshold;
+X = mean(A(:, ind), 2);
+
+Stats.accceptance_ratio = sum(cclist >= ccthreshold) / size(A, 2) * 100;
+temp_ref = corrcoef(X, ref);
+Stats.cc_to_ref = temp_ref(1,2);
+
+if v == 1
+    fprintf("Acceptance ratio: %4.2f [%%]\n", Stats.accceptance_ratio);
+    fprintf("CC between stacked and reference: %4.2f\n", Stats.cc_to_ref);
+end
+end
+
+function [Bnew, Stats] = robuststack(A, eps, maxiter, v)
+
+    if any(any(isnan(A)))
+        % Nan check
+        warning("Traces contain NaN value. Ignore the trace.");
+        nancol = any(isnan(A));
+        A = A(:, ~nancol);
+    elseif any(all(A==0))
+        % All zero check
+        warning("Traces contain all zero trace. Ignore the trace.");
+        zerocol = all(A==0);
+        A = A(:, ~zerocol);
+    end
+
+    N = size(A,2);
+    Bold = median(A, 2, 'omitnan');
+    Bold_norm = Bold ./ norm(Bold,2);
+    w =zeros(N, 1);
+    r = zeros(N, 1);
+    d2 = zeros(N, 1);
+
+    % do 2-norm for all columns in A
+    for ii = 1:N
+        d2(ii) = norm(A(:,ii),2);
+    end
+
+    BdotD = sum(A .* Bold_norm, 1);
+
+    for ii = 1:N
+        r(ii) = norm(A(:,ii) - (BdotD(ii) .* Bold_norm),2);
+        w(ii) = abs(BdotD(ii)) ./ d2(ii) ./ r(ii);
+    end
+
+    Bnew = mean(w'.*A,2);
+    Bnew_norm = Bnew ./ norm(Bnew,2);
+
+    % check convergence
+    epsN = norm(Bnew_norm - Bold_norm,1) / (norm(Bnew_norm,2) * N);
+    Bold_norm = Bnew_norm;
+    iter = 0;
+    
+    while (epsN > eps) && (iter <= maxiter)
+        
+        if v==1
+            fprintf("Iteration %d\n", iter);
+        end
+        
+        BdotD = sum(A .* Bold_norm, 1);
+
+        for ii = 1:N
+            r(ii) = norm(A(:,ii) - (BdotD(ii) .* Bold_norm),2);
+            w(ii) = abs(BdotD(ii)) ./ d2(ii) ./ r(ii);
+        end
+
+        Bnew = mean(w'.*A, 2);
+        Bnew_norm = Bnew ./ norm(Bnew, 2);
+        % check convergence
+        epsN = norm(Bnew_norm - Bold_norm,1) / (norm(Bnew_norm,2) * N);
+        Bold_norm = Bnew_norm;
+        iter = iter + 1;
+        
+        Stats.epsN(iter) = epsN;
+        
+        if v==1
+            fprintf("epsN = %4.4e\n", epsN);
+        end
+    end
+    
+    if iter >= maxiter
+        warning("Robutst stack is not converged.");
+    end
+
+    Stats.weight = w;
+    Stats.iter = iter-1;
+    
+end
+
+
+
+##### SOURCE END #####
+--></body></html>

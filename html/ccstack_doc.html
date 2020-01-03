@@ -1,0 +1,133 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Stacking cross-correlation traces</title><meta name="generator" content="MATLAB 9.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2020-01-03"><meta name="DC.source" content="ccstack_doc.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>Stacking cross-correlation traces</h1><!--introduction--><p>Stack cross-correlation functions with variety of methods using MATLAB&reg;.</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Arguments</a></li><li><a href="#2">Return</a></li><li><a href="#3">Usage</a></li></ul></div><h2 id="1">Arguments</h2><pre class="language-matlab">method::String      : choose <span class="string">"linear"</span>, <span class="string">"selective"</span>, <span class="string">"robust"</span>.
+A::Array            : 2D Array <span class="string">of</span> <span class="string">traces</span> <span class="string">[Ntimelag, Ntraces].</span>     <span class="comment">%</span>
+</pre><p><b>Options:</b></p><pre class="language-matlab">ref::Vector         : reference trace <span class="string">used</span> <span class="string">for</span> <span class="string">selective</span> <span class="string">stack</span> <span class="string">[Ntimelag].</span>
+ccthreshold::Float  : threshold of <span class="string">selective</span> <span class="string">stack.</span>
+eps::Float          : Threshold <span class="keyword">for</span> convergence of <span class="string">robust</span> <span class="string">stack.</span>
+maxiter::Int        : Maximum number <span class="string">of</span> <span class="string">iterations</span> <span class="string">to</span> <span class="string">converge</span> <span class="string">to</span> <span class="string">robust</span> <span class="string">stack.</span>
+v::Int              : <span class="keyword">if</span> v = 1, output <span class="string">process</span> <span class="string">status.</span>
+</pre><h2 id="2">Return</h2><pre class="language-matlab">X::Vector           : stacked trace <span class="string">[Ntimelag]</span>
+Stats::Struct       : status associated <span class="string">with</span> <span class="string">stacking</span> <span class="string">method.</span>
+</pre><h2 id="3">Usage</h2><pre class="codeinput">A = rand(101,3);
+reference = rand(101,1);
+</pre><div><ul><li>linear stack</li></ul></div><pre class="codeinput">[X_linear, Stats_linear] = ccstack(<span class="string">"linear"</span>, A);
+</pre><div><ul><li>selective stack</li></ul></div><pre class="codeinput">[X_selective, Stats_selective] = ccstack(<span class="string">"selective"</span>, A, <span class="string">"ref"</span>, reference);
+</pre><div><ul><li>robust stack</li></ul></div><pre class="codeinput">[X_robust, Stats_robust] = ccstack(<span class="string">"robust"</span>, A, <span class="string">"eps"</span>, 1e-4, <span class="string">"maxiter"</span>, 100);
+</pre><pre class="codeinput"><span class="comment">% figure()</span>
+<span class="comment">% hold on;</span>
+<span class="comment">% plot(X_linear);</span>
+<span class="comment">% plot(X_selective);</span>
+<span class="comment">% plot(X_robust);</span>
+<span class="comment">% legend({'linear','selective', 'robust'})</span>
+</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Stacking cross-correlation traces
+% Stack cross-correlation functions with variety of methods
+% using MATLAB(R).
+
+
+%% Arguments
+% 
+%   method::String      : choose "linear", "selective", "robust".
+%   A::Array            : 2D Array of traces [Ntimelag, Ntraces].     %
+% 
+% *Options:*
+% 
+%   ref::Vector         : reference trace used for selective stack [Ntimelag].
+%   ccthreshold::Float  : threshold of selective stack.
+%   eps::Float          : Threshold for convergence of robust stack.
+%   maxiter::Int        : Maximum number of iterations to converge to robust stack.
+%   v::Int              : if v = 1, output process status.
+% 
+%% Return
+%   X::Vector           : stacked trace [Ntimelag]
+%   Stats::Struct       : status associated with stacking method.
+%% Usage
+A = rand(101,3);
+reference = rand(101,1);
+%%%
+% * linear stack
+[X_linear, Stats_linear] = ccstack("linear", A);
+%%%
+% * selective stack
+[X_selective, Stats_selective] = ccstack("selective", A, "ref", reference);
+%%%
+% * robust stack
+[X_robust, Stats_robust] = ccstack("robust", A, "eps", 1e-4, "maxiter", 100);
+%%
+
+% figure()
+% hold on;
+% plot(X_linear);
+% plot(X_selective);
+% plot(X_robust);
+% legend({'linear','selective', 'robust'}) 
+##### SOURCE END #####
+--></body></html>
