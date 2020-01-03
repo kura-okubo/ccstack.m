@@ -56,7 +56,7 @@ hold on;
 plot(tvec, X_linear, "k");
 plot(tvec, X_selective, "m-");
 plot(tvec, X_selective_2nd, "b--");
-%plot(tvec, X_robust, "r-");
+plot(tvec, X_robust, "r-");
 legend({'Linear', '1st selective', '2nd selective', 'Robust'});
 xlabel('Time lag');
 ylabel('Coherence');
