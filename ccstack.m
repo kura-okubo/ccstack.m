@@ -18,21 +18,21 @@ v           = p.Results.v;
 if p.Results.v == 1; fprintf("Stack method: %s\n", method); end
 
 if method == "linear"
-    
+
     X = mean(A, 2);
     Stats.Ntimelag = size(A, 1);
     Stats.Ntrace = size(A, 2);
-    
+
 elseif method == "selective"
-    
+
     if length(ref) ~= size(A, 1)
         error("Length of reference is diferent from trace matrix.");
     end
-    
+
     [X, Stats] = selectivestack(A, ref, ccthreshold, v);
 
 elseif method == "robust"
-    
+
     [X, Stats] = robuststack(A, eps, maxiter, v);
 
 end
@@ -70,6 +70,8 @@ end
 end
 
 function [Bnew, Stats] = robuststack(A, eps, maxiter, v)
+% Original code is from SeisNoise.jl
+% (https://github.com/tclements/SeisNoise.jl/blob/master/src/stacking.jl)
 
     if any(any(isnan(A)))
         % Nan check
@@ -109,13 +111,13 @@ function [Bnew, Stats] = robuststack(A, eps, maxiter, v)
     epsN = norm(Bnew_norm - Bold_norm,1) / (norm(Bnew_norm,2) * N);
     Bold_norm = Bnew_norm;
     iter = 0;
-    
+
     while (epsN > eps) && (iter <= maxiter)
-        
+
         if v==1
             fprintf("Iteration %d\n", iter);
         end
-        
+
         BdotD = sum(A .* Bold_norm, 1);
 
         for ii = 1:N
@@ -129,21 +131,21 @@ function [Bnew, Stats] = robuststack(A, eps, maxiter, v)
         epsN = norm(Bnew_norm - Bold_norm,1) / (norm(Bnew_norm,2) * N);
         Bold_norm = Bnew_norm;
         iter = iter + 1;
-        
+
         Stats.epsN(iter) = epsN;
-        
+
         if v==1
             fprintf("epsN = %4.4e\n", epsN);
         end
     end
-    
+
     if iter >= maxiter
         warning("Robutst stack is not converged.");
     end
 
     Stats.weight = w;
     Stats.iter = iter-1;
-    
+
 end
 
 
